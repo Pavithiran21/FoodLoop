@@ -1,0 +1,55 @@
+# FoodLoop on your machine in one command:
+#
+#   docker compose up --build
+#   docker compose exec app java -jar /app/app.jar --spring.profiles.active=seed-demo --spring.main.web-application-type=none
+#
+# then open http://localhost:4000/demo (Log in as Donor / Receiver / Admin; password DEMO_PASSWORD below).
+# Set SMTP_* and DEMO_SMTP_* (e.g. free Ethereal inboxes) to see the emails. Address search uses the
+# real OpenStreetMap Nominatim (one request a second at most, cached for a day).
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: foodloop-local-root
+      MYSQL_DATABASE: foodloop_demo
+    volumes:
+      - foodloop-mysql:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-pfoodloop-local-root']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '4000:4000'
+    environment:
+      APP_ENV: development
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: foodloop_demo
+      DB_USER: root
+      DB_PASSWORD: foodloop-local-root
+      JWT_SECRET: local-only-secret-change-me-0123456789abcdef
+      JOB_TRIGGER_SECRET: local-only-job-secret-change-me-0123456789
+      FRONTEND_URL: http://localhost:4000
+      NOMINATIM_USER_AGENT: FoodLoop/1.0 (local docker run)
+      DEMO_MODE: 'true'
+      DEMO_PASSWORD: foodloop-demo-1
+      SMTP_HOST: ${SMTP_HOST:-smtp.ethereal.email}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-set-me}
+      SMTP_PASS: ${SMTP_PASS:-set-me}
+      SMTP_FROM: ${SMTP_FROM:-FoodLoop <noreply@foodloop.test>}
+      DEMO_SMTP_HOST: ${DEMO_SMTP_HOST:-smtp.ethereal.email}
+      DEMO_SMTP_PORT: ${DEMO_SMTP_PORT:-587}
+      DEMO_SMTP_USER: ${DEMO_SMTP_USER:-set-me}
+      DEMO_SMTP_PASS: ${DEMO_SMTP_PASS:-set-me}
+
+volumes:
+  foodloop-mysql:

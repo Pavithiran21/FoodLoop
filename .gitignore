@@ -1,0 +1,17 @@
+.env
+.env.demo
+.env.test
+e2e-results/
+videos/
+node_modules/
+.run/
+target/
+dist/
+tools/
+e2e/fixtures/
+.env*
+
+# Playwright run output and slot locks (e2e/)
+e2e/.slots/
+e2e/test-results/
+e2e/playwright-report/

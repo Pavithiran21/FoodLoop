@@ -1,0 +1,95 @@
+# Every value comes from backend/.env (or the file named by ENV_FILE, for example .env.test).
+# The file is read as a properties file; real environment variables win over it.
+spring:
+  application:
+    name: foodloop-backend
+  config:
+    import: optional:file:${ENV_FILE:.env}[.properties]
+  main:
+    banner-mode: off
+  datasource:
+    # The password is passed on its own, never inside the URL (it may contain '@').
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      # Claims and claim moves hold a connection while they wait for a row lock, and a log-in burst
+      # keeps BCrypt away from the pool but not the other requests; 30 leaves room (MySQL allows 151).
+      maximum-pool-size: ${DB_POOL_SIZE:30}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks that the entities match it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      # Listing photos: JPG or PNG up to 5 MB. The service checks the real type and size again.
+      max-file-size: 5MB
+      max-request-size: 6MB
+  mail:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT}
+    username: ${SMTP_USER}
+    password: ${SMTP_PASS}
+    properties:
+      # Jakarta Mail builds each Message-ID from this address's domain; without it, it uses this
+      # machine's host name, which every recipient would see in the email's headers.
+      mail.from: ${SMTP_FROM:FoodLoop <noreply@foodloop.test>}
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      # Connect within 10 s; then allow 30 s per SMTP reply or write (Ethereal and Brevo can be slow).
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 30000
+      mail.smtp.writetimeout: 30000
+  thymeleaf:
+    prefix: classpath:/templates/
+  web:
+    error:
+      whitelabel:
+        enabled: false
+
+server:
+  port: ${PORT:4000}
+  error:
+    include-stacktrace: never
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    # Hibernate logs the text of every SQL error, and "Duplicate entry 'name@example.com'" would put
+    # an email address in the log. GlobalExceptionHandler and the services log a safe line instead.
+    org.hibernate.orm.jdbc.error: OFF
+  pattern:
+    level: "%5p [%X{requestId:-}]"
+
+app:
+  env: ${APP_ENV:development}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  jwt-secret: ${JWT_SECRET:}
+  job-trigger-secret: ${JOB_TRIGGER_SECRET:}
+  mail-from: ${SMTP_FROM:FoodLoop <noreply@foodloop.test>}
+  rate-limits-enabled: ${RATE_LIMITS_ENABLED:true}
+  demo-mode: ${DEMO_MODE:false}
+  demo-password: ${DEMO_PASSWORD:}
+  time-override-enabled: ${TIME_OVERRIDE_ENABLED:false}
+  # Spring cron (seconds first), run in UTC. "-" turns a job off (the test environment does, so only
+  # the tests decide when a job runs). Expiry every minute; auto-complete every 10 minutes.
+  expiry-cron: ${EXPIRY_CRON:0 * * * * *}
+  auto-complete-cron: ${AUTO_COMPLETE_CRON:0 */10 * * * *}
+  # Emails to @demo.foodloop.test go to this Ethereal inbox, never through SMTP_* (Brevo).
+  demo-smtp:
+    host: ${DEMO_SMTP_HOST:}
+    port: ${DEMO_SMTP_PORT:587}
+    user: ${DEMO_SMTP_USER:}
+    pass: ${DEMO_SMTP_PASS:}
+  # Address search (OpenStreetMap Nominatim). Tests and demos point this at WireMock.
+  nominatim:
+    base-url: ${NOMINATIM_BASE_URL:https://nominatim.openstreetmap.org}
+    user-agent: ${NOMINATIM_USER_AGENT:FoodLoop/1.0 (portfolio project)}
+    country-codes: ${NOMINATIM_COUNTRY_CODES:in}

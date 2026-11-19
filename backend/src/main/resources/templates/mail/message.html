@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!-- The one FoodLoop email layout: wordmark, headline, a sage card with the details, one forest button, a footnote.
+     Every email (claims, pick-up, expiry, verification, suspension, password reset) uses it.
+     th:text escapes every value, so a person's name or an admin's reason can't inject HTML. -->
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${headline}">FoodLoop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@500;700&amp;display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background-color:#f3f6ef;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f6ef;">
+  <tr>
+    <td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="max-width:560px;background-color:#ffffff;border:1px solid #dce4d7;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="padding:22px 24px 0 24px;">
+            <!-- The logo is an inline PNG part (cid:), because most mail clients block SVG, data: images and remote
+                 images. alt is empty on purpose: the wordmark next to it already says "FoodLoop". -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding:0 10px 0 0;vertical-align:middle;">
+                  <img src="cid:foodloop-logo" width="40" height="40" alt="" style="display:block;border:0;width:40px;height:40px;">
+                </td>
+                <td style="vertical-align:middle;font:800 22px 'Bricolage Grotesque',Arial,sans-serif;color:#1f4a2c;">Food<span style="color:#a95410;">Loop</span></td>
+              </tr>
+            </table>
+            <div style="font:800 22px/1.25 'Bricolage Grotesque',Arial,sans-serif;margin-top:18px;color:#18241c;" th:text="${headline}">You claimed sourdough and buns</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 24px 24px 24px;font:500 14px/1.55 'Plus Jakarta Sans',Arial,sans-serif;color:#2c3a30;">
+            <p style="margin:0 0 14px;" th:each="paragraph : ${paragraphs}" th:text="${paragraph}">Intro</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" th:if="${!details.isEmpty()}"
+                   style="margin:0 0 18px;background-color:#fbfcfa;border:1px solid #dce4d7;border-radius:12px;">
+              <tr th:each="detail : ${details}">
+                <td style="padding:10px 14px;font:700 12px 'Plus Jakarta Sans',Arial,sans-serif;color:#56635a;width:96px;vertical-align:top;" th:text="${detail.label()}">Pick-up</td>
+                <td style="padding:10px 14px;font:700 14px/1.45 'Plus Jakarta Sans',Arial,sans-serif;color:#18241c;" th:text="${detail.value()}">Tue 20 Oct, 6:00 pm</td>
+              </tr>
+            </table>
+            <a th:href="${buttonUrl}" href="#"
+               style="display:inline-block;background-color:#1f4a2c;color:#ffffff;text-decoration:none;border-radius:12px;padding:11px 18px;font:800 15px 'Plus Jakarta Sans',Arial,sans-serif;"
+               th:text="${buttonLabel}">View your claim</a>
+            <p style="font-size:13px;color:#56635a;margin:18px 0 0;border-top:1px solid #dce4d7;padding-top:12px;" th:text="${footnote}">Footnote</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
