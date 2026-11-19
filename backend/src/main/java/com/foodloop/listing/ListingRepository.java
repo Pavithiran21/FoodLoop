@@ -9,18 +9,17 @@ import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.LockModeType;
-
 public interface ListingRepository extends JpaRepository<Listing, Long> {
 
-    /** SELECT ... FOR UPDATE: editing, withdrawing and every claim move lock the listing row. */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select l from Listing l where l.id = :id")
+    /**
+     * SELECT ... FOR UPDATE: editing, withdrawing and every claim move lock the listing row.
+     * Plain SQL: Hibernate's lock mode would add "OF <alias>", which TiDB refuses.
+     */
+    @Query(value = "select * from listings where id = :id for update", nativeQuery = true)
     Optional<Listing> lockById(Long id);
 
     /**

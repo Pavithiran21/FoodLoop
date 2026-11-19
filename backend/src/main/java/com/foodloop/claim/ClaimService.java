@@ -99,7 +99,9 @@ public class ClaimService {
 
     /** Why the UPDATE changed nothing: 404 unknown, 409 someone else got it, 422 closed or past its window. */
     private ApiException claimRefused(Long listingId) {
-        Listing listing = listings.findById(listingId).orElseThrow(() -> ApiException.notFound("Listing"));
+        // A locking read, so it sees the latest committed row. A plain read could still show the row as it was when
+        // this transaction began, and a database with snapshot reads (TiDB) would then call a lost race "no longer available".
+        Listing listing = listings.lockById(listingId).orElseThrow(() -> ApiException.notFound("Listing"));
         ListingStatus status = listing.getStatus();
         if (status == ListingStatus.CLAIMED || status == ListingStatus.READY || status == ListingStatus.PICKED_UP
                 || status == ListingStatus.COMPLETED) {

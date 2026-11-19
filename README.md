@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/Pavithiran21/FoodLoop/actions/workflows/ci.yml/badge.svg)](https://github.com/Pavithiran21/FoodLoop/actions/workflows/ci.yml)
 
+**Live demo: [foodloop-pavithiran.onrender.com/demo](https://foodloop-pavithiran.onrender.com/demo)** (log in as a Donor, a Receiver or an Admin in one click). It runs on free hosting, so the first load after a quiet spell can take a minute or two.
+
 A surplus-food marketplace. Restaurants, bakeries and shops list good food they would otherwise throw away. People and charities nearby find it by distance and claim it, and the two sides move the claim from "claimed" to "collected" before the pick-up window closes. Admins verify donors and handle reports.
 
 **Java 21 · Spring Boot 4 · MySQL 8.4 · Flyway · React 19 · TanStack Query · Leaflet + OpenStreetMap · Tailwind CSS 4 · Playwright**
@@ -177,10 +179,12 @@ npm test        # writes .env.test, builds the jar, creates and seeds foodloop_t
 
 One free [Render](https://render.com) web service from the `Dockerfile` (see [`render.yaml`](render.yaml)): Spring Boot serves the built frontend, so the app, the API and the refresh cookie share one origin. Flyway migrates on every start.
 
-- **Database:** a hosted MySQL 8.4 such as Aiven's free plan, with a `foodloop_demo` database. Aiven requires TLS, so set `SPRING_DATASOURCE_URL` with `sslMode=REQUIRED` (see `render.yaml`). Use a real MySQL: the claim guard relies on InnoDB and a UNIQUE index on a generated column.
+- **Database:** a free hosted MySQL-compatible database such as [TiDB Cloud](https://tidbcloud.com) Starter, with a `foodloop_demo` database. It requires TLS, so set `SPRING_DATASOURCE_URL` with `sslMode=VERIFY_IDENTITY` (see `render.yaml`). The claim guard (the conditional `UPDATE` and the UNIQUE index on a generated column) works there, and so do the row locks, which are plain `SELECT … FOR UPDATE` statements (TiDB refuses the `FOR UPDATE OF <alias>` form that Hibernate's lock mode would send). A lost claim is explained with a locking read, so it reads the newest state on any database. The whole Playwright suite, including the ten-receivers-one-listing test, passes on TiDB and on MySQL 8.4.
 - **Settings:** `APP_ENV=production`, `SERVER_FORWARD_HEADERS_STRATEGY=native`, `DEMO_MODE=true`, `FRONTEND_URL` = the service URL, a `NOMINATIM_USER_AGENT` that names the app, and SMTP plus `DEMO_SMTP_*`.
-- **Demo data:** run the `seed-demo` profile once from the service's Shell.
+- **Demo data:** free Render has no Shell, so run the `seed-demo` profile once from your own machine, pointed at the same database.
+- **Memory:** the image caps the JVM heap at half of the free plan's 512 MB, and the app stays near 350 MB under load.
 - **Jobs:** free services sleep after 15 minutes without traffic, so an external cron (e.g. cron-job.org, every 5 minutes) calls `POST /api/internal/jobs/expiry` and `/auto-complete` with the `X-Job-Secret` header.
+- **Email on free hosting:** Render's free plan blocks outbound SMTP, so the live demo sends no email (claim notices, donor decisions, password reset); everything else works. Paid hosting or an email provider with an HTTPS API would lift this.
 
 ## Demo videos
 

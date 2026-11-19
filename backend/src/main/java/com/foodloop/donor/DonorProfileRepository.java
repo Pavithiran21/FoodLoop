@@ -3,16 +3,15 @@ package com.foodloop.donor;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
-
-import jakarta.persistence.LockModeType;
 
 public interface DonorProfileRepository extends JpaRepository<DonorProfile, Long> {
 
-    /** Locked while an Admin decides, so two Admins can't verify and reject the same donor at once. */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select p from DonorProfile p where p.userId = :userId")
+    /**
+     * Locked while an Admin decides, so two Admins can't verify and reject the same donor at once.
+     * Plain SELECT ... FOR UPDATE: Hibernate's lock mode would add "OF <alias>", which TiDB refuses.
+     */
+    @Query(value = "select * from donor_profiles where user_id = :userId for update", nativeQuery = true)
     Optional<DonorProfile> lockByUserId(Long userId);
 
     long countByVerificationStatus(VerificationStatus status);

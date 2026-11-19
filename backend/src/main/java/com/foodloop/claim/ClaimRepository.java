@@ -9,18 +9,17 @@ import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.LockModeType;
-
 public interface ClaimRepository extends JpaRepository<Claim, Long> {
 
-    /** SELECT ... FOR UPDATE: every move of a claim takes this lock first (then the listing's), so moves take turns. */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select c from Claim c where c.id = :id")
+    /**
+     * SELECT ... FOR UPDATE: every move of a claim takes this lock first (then the listing's), so moves take turns.
+     * Plain SQL: Hibernate's lock mode would add "OF <alias>", which TiDB refuses.
+     */
+    @Query(value = "select * from claims where id = :id for update", nativeQuery = true)
     Optional<Claim> lockById(Long id);
 
     Page<Claim> findByReceiverIdAndStatusIn(Long receiverId, Collection<ClaimStatus> statuses, Pageable pageable);

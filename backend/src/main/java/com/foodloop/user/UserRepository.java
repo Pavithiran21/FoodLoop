@@ -3,10 +3,7 @@ package com.foodloop.user;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
-
-import jakarta.persistence.LockModeType;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -14,8 +11,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    /** SELECT ... FOR UPDATE: two Admins suspending (or a person deleting themselves) at once take turns. */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select u from User u where u.id = :id")
+    /**
+     * SELECT ... FOR UPDATE: two Admins suspending (or a person deleting themselves) at once take turns.
+     * Plain SQL: Hibernate's lock mode would add "OF <alias>", which TiDB refuses.
+     */
+    @Query(value = "select * from users where id = :id for update", nativeQuery = true)
     Optional<User> lockById(Long id);
 }
