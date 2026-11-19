@@ -185,6 +185,7 @@ One free [Render](https://render.com) web service from the `Dockerfile` (see [`r
 - **Memory:** the image caps the JVM heap at half of the free plan's 512 MB, and the app stays near 350 MB under load.
 - **Jobs:** free services sleep after 15 minutes without traffic, so an external cron (e.g. cron-job.org, every 5 minutes) calls `POST /api/internal/jobs/expiry` and `/auto-complete` with the `X-Job-Secret` header.
 - **Email on free hosting:** Render's free plan blocks outbound SMTP, so the live demo sends no email (claim notices, donor decisions, password reset); everything else works. Paid hosting or an email provider with an HTTPS API would lift this.
+- **Address search on free hosting:** the search goes to OpenStreetMap's Nominatim, which refuses the shared address that free Render uses, so on the live demo "Find address" (sign-up, profile, a receiver's "Another address") answers "Address search isn't available right now" (the page shows that message and stays usable). The seeded Bengaluru data, Find food by home location, claiming, the donor board and the admin pages work.
 
 ## Demo videos
 
