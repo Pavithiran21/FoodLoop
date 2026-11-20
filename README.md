@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Pavithiran21/FoodLoop/actions/workflows/ci.yml/badge.svg)](https://github.com/Pavithiran21/FoodLoop/actions/workflows/ci.yml)
 
-**Live demo: [foodloop-pavithiran.onrender.com/demo](https://foodloop-pavithiran.onrender.com/demo)** (log in as a Donor, a Receiver or an Admin in one click). It runs on free hosting, so the first load after a quiet spell can take a minute or two.
+**Live demo: [food-loop-orcin.vercel.app/demo](https://food-loop-orcin.vercel.app/demo)** (log in as a Donor, a Receiver or an Admin in one click). It runs on free hosting, so the first load after a quiet spell can take a minute or two.
 
 A surplus-food marketplace. Restaurants, bakeries and shops list good food they would otherwise throw away. People and charities nearby find it by distance and claim it, and the two sides move the claim from "claimed" to "collected" before the pick-up window closes. Admins verify donors and handle reports.
 
