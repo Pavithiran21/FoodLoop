@@ -177,10 +177,13 @@ npm test        # writes .env.test, builds the jar, creates and seeds foodloop_t
 
 ## Deploy
 
-One free [Render](https://render.com) web service from the `Dockerfile` (see [`render.yaml`](render.yaml)): Spring Boot serves the built frontend, so the app, the API and the refresh cookie share one origin. Flyway migrates on every start.
+The frontend runs on [Vercel](https://vercel.com) and the API on [Render](https://render.com), and the browser still sees one origin: [`frontend/vercel.json`](frontend/vercel.json) forwards `/api/*` to the Render service, so the cookies (SameSite=Strict) work with no CORS or cross-site cookies.
+
+- **Frontend (Vercel):** import the repository, set the Root Directory to `frontend` (framework Vite, build `npm run build`, output `dist`). `vercel.json` also sends every other path to `index.html` for React Router and sets the page's security headers. If the Render service is renamed, change its URL in `vercel.json`.
+- **API (Render):** one free web service from `Dockerfile.api` (see [`render.yaml`](render.yaml)). Flyway migrates on every start. The full `Dockerfile` (API plus built frontend on one origin) is what `docker-compose.yml` and CI use.
 
 - **Database:** a free hosted MySQL-compatible database such as [TiDB Cloud](https://tidbcloud.com) Starter, with a `foodloop_demo` database. It requires TLS, so set `SPRING_DATASOURCE_URL` with `sslMode=VERIFY_IDENTITY` (see `render.yaml`). The claim guard (the conditional `UPDATE` and the UNIQUE index on a generated column) works there, and so do the row locks, which are plain `SELECT … FOR UPDATE` statements (TiDB refuses the `FOR UPDATE OF <alias>` form that Hibernate's lock mode would send). A lost claim is explained with a locking read, so it reads the newest state on any database. The whole Playwright suite, including the ten-receivers-one-listing test, passes on TiDB and on MySQL 8.4.
-- **Settings:** `APP_ENV=production`, `SERVER_FORWARD_HEADERS_STRATEGY=native`, `DEMO_MODE=true`, `FRONTEND_URL` = the service URL, a `NOMINATIM_USER_AGENT` that names the app, and SMTP plus `DEMO_SMTP_*`.
+- **Settings:** `APP_ENV=production`, `SERVER_FORWARD_HEADERS_STRATEGY=native` and `SERVER_TOMCAT_REMOTEIP_INTERNAL_PROXIES=.*` (so rate limits see the visitor's IP behind Vercel and Render's proxies), `DEMO_MODE=true`, `FRONTEND_URL` = the Vercel URL, a `NOMINATIM_USER_AGENT` that names the app, and SMTP plus `DEMO_SMTP_*`.
 - **Demo data:** free Render has no Shell, so run the `seed-demo` profile once from your own machine, pointed at the same database.
 - **Memory:** the image caps the JVM heap at half of the free plan's 512 MB, and the app stays near 350 MB under load.
 - **Jobs:** free services sleep after 15 minutes without traffic, so an external cron (e.g. cron-job.org, every 5 minutes) calls `POST /api/internal/jobs/expiry` and `/auto-complete` with the `X-Job-Secret` header.
